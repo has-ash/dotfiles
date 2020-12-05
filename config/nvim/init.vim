@@ -35,7 +35,9 @@ Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 
 " On-demand lazy load
-Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
+" TODO (soft): learn to use which key if needed
+"  https://github.com/liuchengxu/vim-which-key
+"Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 
 " Semantic language support
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -57,6 +59,7 @@ call plug#end()
 if !has('gui_running')
   set t_Co=256
 endif
+
 if (match($TERM, "-256color") != -1) && (match($TERM, "screen-256color") == -1)
   " screen does not (yet) support truecolor
   set termguicolors
@@ -113,11 +116,25 @@ set splitbelow
 " wildmenu settings
 " taken from jonhoo(github)
 set wildmenu
-set wildmode=list:longest
+set wildmode=list:longest,full
 set wildignore=.hg,.svn,*~,*.png,*.jpg,*.gif,*.settings,*min.js,*.swp,*.o,*.hi
 
+" draw sign column
+set signcolumn=yes
+
+" find hidden files too
+" from:  https://github.com/junegunn/fzf.vim/issues/226
+
+command! -bang -nargs=? -complete=dir HFiles
+	\ call fzf#vim#fiels(<q-args>, {'source': 'rg --hidden --ignore .git -g ""'}, <bang>0 )
+
+noremap <leader>rh :HFiles<cr>
+
+noremap <leader>rg :GFiles<cr>
 " noremap <leader>s for Rg search
-noremap <leader>s :Rg
+" use with <leader>r? to get preview
+" or       <leader>:  for no preview
+noremap <leader>r :Rg<cr> 
 let g:fzf_layout = { 'down': '~20%' }
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
@@ -143,8 +160,13 @@ set cmdheight=2
 " You will have bad experience for diagnostic messages when it's default 4000.
 set updatetime=300
 
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " hasan: general leader key binds
+
+" Ctrl+h to stop searching
+vnoremap <C-h> :nohlsearch<cr>
+nnoremap <C-h> :nohlsearch<cr>
 
 " Open new file adjacent to current file
 nnoremap <leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
@@ -199,7 +221,15 @@ tnoremap <C-w>l <C-\><C-n><C-w>l
 
 map <C-n> :NERDTreeToggle<CR>
 " the most important keybind ever: ESC -> fd  
-imap fd <Esc>
+nnoremap fd <Esc>
+inoremap fd <Esc>
+vnoremap fd <Esc>
+snoremap fd <Esc>
+xnoremap fd <Esc>
+cnoremap fd <Esc>
+onoremap fd <Esc>
+lnoremap fd <Esc>
+tnoremap fd <Esc>
 
  " <leader><leader> toggles between buffers
 nnoremap <leader><leader> <c-^>
@@ -287,3 +317,14 @@ let g:lightline = {
 function! LightlineFilename()
   return expand('%:t') !=# '' ? @% : '[No Name]'
 endfunction
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Which Key
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"nnoremap <silent> <leader>, :WhichKey '<Space>'<cr>
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" vim-rooter config
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:rooter_patterns = [ '.git', 'Makefile', 'Cargo.toml', '_darcs']
