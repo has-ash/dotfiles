@@ -3,22 +3,14 @@ let &packpath = &runtimepath
 "source ~/.vimrc
 
 let mapleader= "\<Space>"
+set shell=/bin/bash
 
-set tabstop=4
-set shiftwidth=4
-set autoindent
-set expandtab
-syntax on
+" which requires no timeout
+set notimeout
 
-" line numbers
-set number
-set relativenumber
-
-tnoremap <C-w>h <C-\><C-n><C-w>h
-tnoremap <C-w>j <C-\><C-n><C-w>j
-tnoremap <C-w>k <C-\><C-n><C-w>k
-tnoremap <C-w>l <C-\><C-n><C-w>l
-
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" PlugsIns 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 call plug#begin()
 " lsps
 "Plug 'neovim/nvim-lsp'
@@ -26,11 +18,24 @@ call plug#begin()
 " editing/moving around
 Plug 'preservim/nerdtree'
 Plug 'https://github.com/tpope/vim-surround'
+" the missing motion for vim
+" to combine with operators, use z instead of s
+" since s is taken by surround.vim
+Plug 'justinmk/vim-sneak'
 
 " colors / visuals
 Plug 'https://github.com/morhetz/gruvbox'
-
+"Plug 'NLKNguyen/papercolor-theme'
 Plug 'itchyny/lightline.vim'
+
+
+" fuzzy find
+Plug 'airblade/vim-rooter'
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+
+" On-demand lazy load
+Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 
 " Semantic language support
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -45,13 +50,122 @@ Plug 'godlygeek/tabular'
 Plug 'plasticboy/vim-markdown'
 call plug#end()
 
-map <C-n> :NERDTreeToggle<CR>
-imap fd <Esc>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Color Settings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" deal with colors
+if !has('gui_running')
+  set t_Co=256
+endif
+if (match($TERM, "-256color") != -1) && (match($TERM, "screen-256color") == -1)
+  " screen does not (yet) support truecolor
+  set termguicolors
+endif
+set background=dark
 
-set bg=dark
 let g:gruvbox_italic=1
+"set bg=light
+"colorscheme PaperColor
+set bg=dark
 colorscheme gruvbox
 set termguicolors
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Editor Settings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set mouse=a
+
+set tabstop=4
+set shiftwidth=4
+set autoindent
+" Makefiles?
+set noexpandtab
+syntax on
+
+set incsearch
+set ignorecase
+set smartcase
+" by default, substitute all matches on line
+set gdefault
+
+" from the help menu: no highlighting after search
+augroup vimrc-incsearch-highlight
+  autocmd!
+  autocmd CmdlineEnter /,\? :set hlsearch
+  autocmd CmdlineLeave /,\? :set nohlsearch
+augroup END
+
+" again jonhoo(github) / give me centered search results
+nnoremap <silent> n nzz
+nnoremap <silent> N Nzz
+nnoremap <silent> * *zz
+nnoremap <silent> # #zz
+nnoremap <silent> g* g*zz
+
+" line numbers | linenumbers
+set number
+set relativenumber
+
+" sane window splits
+set splitright
+set splitbelow
+
+" wildmenu settings
+" taken from jonhoo(github)
+set wildmenu
+set wildmode=list:longest
+set wildignore=.hg,.svn,*~,*.png,*.jpg,*.gif,*.settings,*min.js,*.swp,*.o,*.hi
+
+" noremap <leader>s for Rg search
+noremap <leader>s :Rg
+let g:fzf_layout = { 'down': '~20%' }
+command! -bang -nargs=* Rg
+  \ call fzf#vim#grep(
+  \   'rg --column --line-number --no-heading --color=always '.shellescape(<q-args>), 1,
+  \   <bang>0 ? fzf#vim#with_preview('up:60%')
+  \           : fzf#vim#with_preview('right:50%:hidden', '?'),
+  \   <bang>0)
+
+function! s:list_cmd()
+  let base = fnamemodify(expand('%'), ':h:.:S')
+  return base == '.' ? 'fd --type file --follow' : printf('fd --type file --follow | proximity-sort %s', shellescape(expand('%')))
+endfunction
+
+command! -bang -nargs=? -complete=dir Files
+  \ call fzf#vim#files(<q-args>, {'source': s:list_cmd(),
+  \                               'options': '--tiebreak=index'}, <bang>0)
+
+
+
+" Completion
+" Better display for messages
+set cmdheight=2
+" You will have bad experience for diagnostic messages when it's default 4000.
+set updatetime=300
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" hasan: general leader key binds
+
+" Open new file adjacent to current file
+nnoremap <leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
+nnoremap <leader>w :w<cr>
+
+" Open hotkeys
+map <C-p> :Files<CR>
+nmap <leader>; :Buffers<CR>
+"nnoremap <Leader>o :
+
+" copy paste to sys clipboard
+" from: https://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
+
+"vmap <Leader>y "+y
+"vmap <Leader>d "+d
+"
+"nmap <Leader>p "+p
+"nmap <Leader>P "+P
+"
+"vmap <Leader>p "+p
+"vmap <Leader>P "+P
 
 ":lua <<END
 "local lspconfig = require'lspconfig'
@@ -60,9 +174,43 @@ set termguicolors
 "  lspconfig.cmake.setup{}
 "  lspconfig.texlab.setup{}
 "END
+"
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" author: jonhoo github
+" hasan: general keybinds
+
+" get rid of the horrible buffer for previous commands
+map q: :q
+
+" move around a line easier
+map H ^
+map L $
+
+" copy to/from sys clipboard using xsel
+noremap <leader>p :read !xsel --clipboard --output<cr>
+noremap <leader>c :w !xsel --input --clipboard<cr>
+
+" jump between windows
+tnoremap <C-w>h <C-\><C-n><C-w>h
+tnoremap <C-w>j <C-\><C-n><C-w>j
+tnoremap <C-w>k <C-\><C-n><C-w>k
+tnoremap <C-w>l <C-\><C-n><C-w>l
+
+
+map <C-n> :NERDTreeToggle<CR>
+" the most important keybind ever: ESC -> fd  
+imap fd <Esc>
+
+ " <leader><leader> toggles between buffers
+nnoremap <leader><leader> <c-^>
+
+" <leader>q shows stats
+nnoremap <leader>q g<c-g>
+
+" Keymap for replacing up to next _ or -
+noremap <leader>m ct_
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" " author: jonhoo github
 " 'Smart' navigation
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
@@ -70,7 +218,7 @@ set termguicolors
 inoremap <silent><expr> <TAB>
       \ pumvisible() ? "\<C-n>" :
       \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
+	  \ coc#refresh()
 
 function! s:check_back_space() abort
   let col = col('.') - 1
