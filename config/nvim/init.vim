@@ -1,13 +1,13 @@
-set runtimepath^=~/.vim runtimepath+=~/.vim/after
-let &packpath = &runtimepath
-"source ~/.vimrc
-
-let mapleader= "\<Space>"
 set shell=/bin/bash
 
-" which requires no timeout
-set notimeout
+set runtimepath^=~/.vim runtimepath+=~/.vim/after
+let &packpath = &runtimepath
+"scurce ~/.vimrc
 
+let mapleader= "\<Space>"
+
+" set timeout for which key
+set timeoutlen=500
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " PlugsIns 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -37,7 +37,7 @@ Plug 'junegunn/fzf.vim'
 " On-demand lazy load
 " TODO (soft): learn to use which key if needed
 "  https://github.com/liuchengxu/vim-which-key
-"Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
+Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 
 " Semantic language support
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -50,8 +50,19 @@ Plug 'rhysd/vim-clang-format'
 Plug 'dag/vim-fish'
 Plug 'godlygeek/tabular'
 Plug 'plasticboy/vim-markdown'
+
+" which-key for my sanity
+Plug 'liuchengxu/vim-which-key', { 'on' : ['WhichKey', 'WhichKey!'] }
+
 call plug#end()
 
+" create which_map
+" register descriptions for which_key
+autocmd! User vim-which-key call which_key#register('<Space>', "g:which_key_map")
+
+nnoremap <silent> <leader>  :<c-u>WhichKey '<Space>'<cr>
+nnoremap <silent> <localleader>  :<c-u>WhichKeyVisual '<Space>',<cr>
+let g:which_key_map = {}
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Color Settings
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -126,15 +137,22 @@ set signcolumn=yes
 " from:  https://github.com/junegunn/fzf.vim/issues/226
 
 command! -bang -nargs=? -complete=dir HFiles
-	\ call fzf#vim#fiels(<q-args>, {'source': 'rg --hidden --ignore .git -g ""'}, <bang>0 )
+	\ call fzf#vim#grep(<q-args>, {'source': 'rg --hidden --ignore .git -g ""'}, <bang>0 )
+
+let g:which_key_map.r = {'name':'+fzf'}
 
 noremap <leader>rh :HFiles<cr>
+let g:which_key_map.r.h = 'hidden-files'
 
 noremap <leader>rg :GFiles<cr>
+let g:which_key_map.r.h = 'git-ls files'
+
 " noremap <leader>s for Rg search
 " use with <leader>r? to get preview
 " or       <leader>:  for no preview
-noremap <leader>r :Rg<cr> 
+noremap <leader>rs :Rg<cr> 
+let g:which_key_map.r.h = 'rip-grep(?|:)'
+
 let g:fzf_layout = { 'down': '~20%' }
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
@@ -148,11 +166,21 @@ function! s:list_cmd()
   return base == '.' ? 'fd --type file --follow' : printf('fd --type file --follow | proximity-sort %s', shellescape(expand('%')))
 endfunction
 
+" Open hotkeys
+map <C-p> :Files<CR>
+
+noremap <leader>rf :FZF<cr>
+let g:which_key_map.r.f = 'fzf-files-curr'
+
+noremap <leader>rF :FZF ~<cr>
+let g:which_key_map.r.F = 'fzf-files-home'
+
+nmap <leader>rb :Buffers<CR>
+let g:which_key_map.r.b = 'curr-buffers'
+
 command! -bang -nargs=? -complete=dir Files
   \ call fzf#vim#files(<q-args>, {'source': s:list_cmd(),
   \                               'options': '--tiebreak=index'}, <bang>0)
-
-
 
 " Completion
 " Better display for messages
@@ -168,14 +196,13 @@ set updatetime=300
 vnoremap <C-h> :nohlsearch<cr>
 nnoremap <C-h> :nohlsearch<cr>
 
+let g:which_key_map.f = {'name' : '+file'} 
 " Open new file adjacent to current file
-nnoremap <leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
-nnoremap <leader>w :w<cr>
+nnoremap <leader>fe :e <C-R>=expand("%:p:h") . "/" <CR>
+let g:which_key_map.f.e = 'edit-in-curr-dir'
 
-" Open hotkeys
-map <C-p> :Files<CR>
-nmap <leader>; :Buffers<CR>
-"nnoremap <Leader>o :
+nnoremap <leader>fs :w<cr>
+let g:which_key_map.f.s = 'save-file'
 
 " copy paste to sys clipboard
 " from: https://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
@@ -240,7 +267,10 @@ nnoremap <leader>q g<c-g>
 " Keymap for replacing up to next _ or -
 noremap <leader>m ct_
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" " author: jonhoo github
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" "
+let g:which_key_map.l = {'name' : '+lsp'} 
+
+"author: jonhoo github (mostly with some additions by me)
 " 'Smart' navigation
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
@@ -276,7 +306,24 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
-nmap <leader>rn <Plug>(coc-rename)
+
+" also add leader based keys - discoverability?
+nmap <silent> <leader>ld <Plug>(coc-definition)
+nmap <silent> <leader>ly <Plug>(coc-type-definition)
+nmap <silent> <leader>li <Plug>(coc-implementation)
+nmap <silent> <leader>lb <Plug>(coc-references)
+nmap <silent> <leader>ln <Plug>(coc-diagnostic-next)
+nmap <silent> <leader>lp <Plug>(coc-diagnostic-prev)
+
+let g:which_key_map.l.d = 'coc-definition' 
+let g:which_key_map.l.y = 'coc-type-def' 
+let g:which_key_map.l.i = 'coc-impl' 
+let g:which_key_map.l.b = 'coc-refs' 
+let g:which_key_map.l.n = 'coc-diag-next' 
+let g:which_key_map.l.p = 'coc-diag-prev' 
+
+nmap <leader>lr <Plug>(coc-rename)
+let g:which_key_map.l.r = 'coc-rename' 
 
 " Introduce function text object
 " NOTE: Requires 'textDocument.documentSymbol' support from the language server.
@@ -285,25 +332,34 @@ xmap af <Plug>(coc-funcobj-a)
 omap if <Plug>(coc-funcobj-i)
 omap af <Plug>(coc-funcobj-a)
 
+" TODO: what does TAB do here?
 " Use <TAB> for selections ranges.
 nmap <silent> <TAB> <Plug>(coc-range-select)
 xmap <silent> <TAB> <Plug>(coc-range-select)
 
 " Find symbol of current document.
-nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
+nnoremap <silent> <leader>lo  :<C-u>CocList outline<cr>
+let g:which_key_map.l.o = 'find-in-curr-doc' 
 
 " Search workspace symbols.
-nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
+nnoremap <silent> <leader>ls  :<C-u>CocList -I symbols<cr>
+let g:which_key_map.l.s = 'find-in-workspace' 
 
+" TODO
 " Implement methods for trait
 nnoremap <silent> <space>i  :call CocActionAsync('codeAction', '', 'Implement missing members')<cr>
 
 " Show actions available at this location
-nnoremap <silent> <space>a  :CocAction<cr>
+nnoremap <silent> <leader>la  :CocAction<cr>
+let g:which_key_map.l.a = 'show-actions' 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "author: jonhoo
 " Lightline
+function! LightlineFilename()
+  return expand('%:t') !=# '' ? @% : '[No Name]'
+endfunction
+
 let g:lightline = {
       \ 'active': {
       \   'left': [ [ 'mode', 'paste' ],
@@ -314,17 +370,41 @@ let g:lightline = {
       \   'cocstatus': 'coc#status'
       \ },
       \ }
-function! LightlineFilename()
-  return expand('%:t') !=# '' ? @% : '[No Name]'
-endfunction
-
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Which Key
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"nnoremap <silent> <leader>, :WhichKey '<Space>'<cr>
-
+" Use auocmd to force lightline update.
+autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " vim-rooter config
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:rooter_patterns = [ '.git', 'Makefile', 'Cargo.toml', '_darcs']
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" which key config
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Buffer commands
+let g:which_key_map.b = {'name' : '+buffers'}
+
+noremap <silent> <leader>bn :bn<cr>
+noremap <silent> <leader>bp :bp<cr>
+let g:which_key_map.b.n = 'next buffer'
+let g:which_key_map.b.p = 'previcus buffer'
+
+" mappings based on existing maps
+" dict for which-key
+let g:which_key_map['w'] = {
+			\ 'name' : '+windows',
+			\ 'w' : ['<C-W>w' , 'other-window'] ,
+			\ 'd' : ['<C-W>c' , 'delete-window'] ,
+			\ '-' : ['<C-W>s' , 'split-window-below'] ,
+			\ '|' : ['<C-W>v' , 'split-window-right'] ,
+			\ 'h' : ['<C-W>h' , 'window-left'] ,
+			\ 'j' : ['<C-W>j' , 'window-below'] ,
+			\ 'k' : ['<C-W>k' , 'window-up'] ,
+			\ 'l' : ['<C-W>l' , 'window-right'] ,
+			\ 'H' : ['<C-W>H' , 'expand-window-left'] ,
+			\ 'J' : ['<C-W>J' , 'expand-window-below'] ,
+			\ 'K' : ['<C-W>K' , 'expand-window-up'] ,
+			\ 'L' : ['<C-W>L' , 'expand-window-right'] ,
+			\ '=' : ['<C-W>=' , 'balance-window'] ,
+			\ '?' : ['Windows' , 'fzf-window'] ,
+			\}
