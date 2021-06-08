@@ -54,6 +54,15 @@ Plug 'plasticboy/vim-markdown'
 " which-key for my sanity
 Plug 'liuchengxu/vim-which-key', { 'on' : ['WhichKey', 'WhichKey!'] }
 
+" syntax highlighting for flex, lex, yacc and bison
+Plug 'https://github.com/justinmk/vim-syntax-extra'
+
+" comment code using gcc
+Plug 'https://tpope.io/vim/commentary.git'
+
+" tree sitter for highlighting
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
 call plug#end()
 
 " create which_map
@@ -63,6 +72,7 @@ autocmd! User vim-which-key call which_key#register('<Space>', "g:which_key_map"
 nnoremap <silent> <leader>  :<c-u>WhichKey '<Space>'<cr>
 nnoremap <silent> <localleader>  :<c-u>WhichKeyVisual '<Space>',<cr>
 let g:which_key_map = {}
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Color Settings
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -89,8 +99,8 @@ set termguicolors
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set mouse=a
 
-set tabstop=4
-set shiftwidth=4
+set tabstop=2
+set shiftwidth=2
 set autoindent
 " Makefiles?
 set noexpandtab
@@ -188,6 +198,8 @@ set cmdheight=2
 " You will have bad experience for diagnostic messages when it's default 4000.
 set updatetime=300
 
+" use prettier
+command! -nargs=0 Prettier :CocCommand prettier.formatFile
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " hasan: general leader key binds
@@ -408,3 +420,52 @@ let g:which_key_map['w'] = {
 			\ '=' : ['<C-W>=' , 'balance-window'] ,
 			\ '?' : ['Windows' , 'fzf-window'] ,
 			\}
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Coc Config (this probably needs refactoring now since it is sprawled all
+" over)
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" get documentation using K
+" Use K to show documentation in preview window.
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
+
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Remap <C-f> and <C-b> for scroll float windows/popups.
+if has('nvim-0.4.0') || has('patch-8.2.0750')
+  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+endif
+
+" vim-markdown: use zR to open all folds in markdown
+" zM fold everything
+" zc / zC to close folds your cursor is on
+"
+"
+"""""""""""" treesitter config
+lua <<EOF
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = "maintained",
+	highlight = {
+	enable = true,
+	},
+	indent = {
+	enable = true
+	}
+}
+EOF
