@@ -217,7 +217,7 @@ bar {
 				# urgent: workspace contains window with the urgency hint
 				# color class     <border> <bg>   <text>
         focused_workspace #458588 #458588 #fbf1c7
-        active_workspace #98791a #98791a #ebdbb2
+        active_workspace #98971a #98971a #ebdbb2
         inactive_workspace #282828 #282828 #ebdbb2
         urgent_workspace #fb4934 #fb4934 #ffffff
     }	font pango: Source Code Pro Semi-bold 10 
