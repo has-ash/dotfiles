@@ -192,7 +192,7 @@ mouse_bindings:
   - { mouse: Middle, action: PasteSelection }
 
 mouse:
-  url:
+  hints:
     # use program to open links
     launcher: xdg-open
 
@@ -200,6 +200,4 @@ window.dynamic_title: true
 
 shell:
   program: /bin/fish
-
-
 
