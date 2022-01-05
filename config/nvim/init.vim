@@ -12,16 +12,13 @@ set timeoutlen=500
 " PlugsIns 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 call plug#begin()
-" lsps
-"Plug 'neovim/nvim-lsp'
-
 " editing/moving around
 Plug 'preservim/nerdtree'
 Plug 'https://github.com/tpope/vim-surround'
 " the missing motion for vim
 " to combine with operators, use z instead of s
 " since s is taken by surround.vim
-Plug 'justinmk/vim-sneak'
+" Plug 'justinmk/vim-sneak'
 
 " colors / visuals
 Plug 'https://github.com/morhetz/gruvbox'
@@ -34,13 +31,9 @@ Plug 'airblade/vim-rooter'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 
-" On-demand lazy load
-" TODO (soft): learn to use which key if needed
-"  https://github.com/liuchengxu/vim-which-key
-Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
-
 " Semantic language support
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neovim/nvim-lspconfig'
 
 " Syntactic language support
 Plug 'cespare/vim-toml'
@@ -198,9 +191,6 @@ set cmdheight=2
 " You will have bad experience for diagnostic messages when it's default 4000.
 set updatetime=300
 
-" use prettier
-command! -nargs=0 Prettier :CocCommand prettier.formatFile
-
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " hasan: general leader key binds
 
@@ -215,27 +205,6 @@ let g:which_key_map.f.e = 'edit-in-curr-dir'
 
 nnoremap <leader>fs :w<cr>
 let g:which_key_map.f.s = 'save-file'
-
-" copy paste to sys clipboard
-" from: https://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
-
-"vmap <Leader>y "+y
-"vmap <Leader>d "+d
-"
-"nmap <Leader>p "+p
-"nmap <Leader>P "+P
-"
-"vmap <Leader>p "+p
-"vmap <Leader>P "+P
-
-":lua <<END
-"local lspconfig = require'lspconfig'
-"  lspconfig.rust_analyzer.setup{}
-"  lspconfig.ccls.setup{}
-"  lspconfig.cmake.setup{}
-"  lspconfig.texlab.setup{}
-"END
-"
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " hasan: general keybinds
@@ -256,7 +225,6 @@ tnoremap <C-w>h <C-\><C-n><C-w>h
 tnoremap <C-w>j <C-\><C-n><C-w>j
 tnoremap <C-w>k <C-\><C-n><C-w>k
 tnoremap <C-w>l <C-\><C-n><C-w>l
-
 
 map <C-n> :NERDTreeToggle<CR>
 " the most important keybind ever: ESC -> fd  
@@ -282,23 +250,10 @@ noremap <leader>m ct_
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" "
 let g:which_key_map.l = {'name' : '+lsp'} 
 
-"author: jonhoo github (mostly with some additions by me)
-" 'Smart' navigation
-" Use tab for trigger completion with characters ahead and navigate.
-" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
-" other plugin before putting this into your config.
-inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-	  \ coc#refresh()
-
 function! s:check_back_space() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
-
-" Use <c-.> to trigger completion.
-inoremap <silent><expr> <c-.> coc#refresh()
 
 " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current
 " position. Coc only does snippet and additional edit on confirm.
@@ -308,63 +263,6 @@ else
   imap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
 endif
 
-" Use `[g` and `]g` to navigate diagnostics
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
-
-" GoTo code navigation.
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-
-
-" also add leader based keys - discoverability?
-nmap <silent> <leader>ld <Plug>(coc-definition)
-nmap <silent> <leader>ly <Plug>(coc-type-definition)
-nmap <silent> <leader>li <Plug>(coc-implementation)
-nmap <silent> <leader>lb <Plug>(coc-references)
-nmap <silent> <leader>ln <Plug>(coc-diagnostic-next)
-nmap <silent> <leader>lp <Plug>(coc-diagnostic-prev)
-
-let g:which_key_map.l.d = 'coc-definition' 
-let g:which_key_map.l.y = 'coc-type-def' 
-let g:which_key_map.l.i = 'coc-impl' 
-let g:which_key_map.l.b = 'coc-refs' 
-let g:which_key_map.l.n = 'coc-diag-next' 
-let g:which_key_map.l.p = 'coc-diag-prev' 
-
-nmap <leader>lr <Plug>(coc-rename)
-let g:which_key_map.l.r = 'coc-rename' 
-
-" Introduce function text object
-" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
-xmap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap if <Plug>(coc-funcobj-i)
-omap af <Plug>(coc-funcobj-a)
-
-" TODO: what does TAB do here?
-" Use <TAB> for selections ranges.
-nmap <silent> <TAB> <Plug>(coc-range-select)
-xmap <silent> <TAB> <Plug>(coc-range-select)
-
-" Find symbol of current document.
-nnoremap <silent> <leader>lo  :<C-u>CocList outline<cr>
-let g:which_key_map.l.o = 'find-in-curr-doc' 
-
-" Search workspace symbols.
-nnoremap <silent> <leader>ls  :<C-u>CocList -I symbols<cr>
-let g:which_key_map.l.s = 'find-in-workspace' 
-
-" TODO
-" Implement methods for trait
-nnoremap <silent> <space>i  :call CocActionAsync('codeAction', '', 'Implement missing members')<cr>
-
-" Show actions available at this location
-nnoremap <silent> <leader>la  :CocAction<cr>
-let g:which_key_map.l.a = 'show-actions' 
-
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "author: jonhoo
 " Lightline
@@ -372,18 +270,7 @@ function! LightlineFilename()
   return expand('%:t') !=# '' ? @% : '[No Name]'
 endfunction
 
-let g:lightline = {
-      \ 'active': {
-      \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'cocstatus', 'readonly', 'filename', 'modified' ] ]
-      \ },
-      \ 'component_function': {
-      \   'filename': 'LightlineFilename',
-      \   'cocstatus': 'coc#status'
-      \ },
-      \ }
-" Use auocmd to force lightline update.
-autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " vim-rooter config
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -401,62 +288,7 @@ noremap <silent> <leader>bp :bp<cr>
 let g:which_key_map.b.n = 'next buffer'
 let g:which_key_map.b.p = 'previcus buffer'
 
-" mappings based on existing maps
-" dict for which-key
-let g:which_key_map['w'] = {
-			\ 'name' : '+windows',
-			\ 'w' : ['<C-W>w' , 'other-window'] ,
-			\ 'd' : ['<C-W>c' , 'delete-window'] ,
-			\ '-' : ['<C-W>s' , 'split-window-below'] ,
-			\ '|' : ['<C-W>v' , 'split-window-right'] ,
-			\ 'h' : ['<C-W>h' , 'window-left'] ,
-			\ 'j' : ['<C-W>j' , 'window-below'] ,
-			\ 'k' : ['<C-W>k' , 'window-up'] ,
-			\ 'l' : ['<C-W>l' , 'window-right'] ,
-			\ 'H' : ['<C-W>H' , 'expand-window-left'] ,
-			\ 'J' : ['<C-W>J' , 'expand-window-below'] ,
-			\ 'K' : ['<C-W>K' , 'expand-window-up'] ,
-			\ 'L' : ['<C-W>L' , 'expand-window-right'] ,
-			\ '=' : ['<C-W>=' , 'balance-window'] ,
-			\ '?' : ['Windows' , 'fzf-window'] ,
-			\}
 
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Coc Config (this probably needs refactoring now since it is sprawled all
-" over)
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" get documentation using K
-" Use K to show documentation in preview window.
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  elseif (coc#rpc#ready())
-    call CocActionAsync('doHover')
-  else
-    execute '!' . &keywordprg . " " . expand('<cword>')
-  endif
-endfunction
-
-autocmd CursorHold * silent call CocActionAsync('highlight')
-
-" Remap <C-f> and <C-b> for scroll float windows/popups.
-if has('nvim-0.4.0') || has('patch-8.2.0750')
-  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
-  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-endif
-
-" vim-markdown: use zR to open all folds in markdown
-" zM fold everything
-" zc / zC to close folds your cursor is on
-"
-"
 """""""""""" treesitter config
 lua <<EOF
 require'nvim-treesitter.configs'.setup {
@@ -468,4 +300,56 @@ require'nvim-treesitter.configs'.setup {
 	enable = true
 	}
 }
+EOF
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" LSP CONFIG
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+lua << EOF
+local nvim_lsp = require('lspconfig')
+
+-- Use an on_attach function to only map the following keys
+-- after the language server attaches to the current buffer
+local on_attach = function(client, bufnr)
+  local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+  local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+  -- Enable completion triggered by <c-x><c-o>
+  buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+  -- Mappings.
+  local opts = { noremap=true, silent=true }
+
+  -- See `:help vim.lsp.*` for documentation on any of the below functions
+  buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+  buf_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+  buf_set_keymap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+  buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+  buf_set_keymap('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
+  buf_set_keymap('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
+  buf_set_keymap('n', '<space>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
+  buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+  buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+  buf_set_keymap('n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+  buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+  buf_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
+  buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+  buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
+  buf_set_keymap('n', '<space>q', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
+  buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+
+end
+
+-- Use a loop to conveniently call 'setup' on multiple servers and
+-- map buffer local keybindings when the language server attaches
+local servers = { 'pyright', 'rust_analyzer', 'clangd' }
+for _, lsp in ipairs(servers) do
+  nvim_lsp[lsp].setup {
+    on_attach = on_attach,
+    flags = {
+      debounce_text_changes = 150,
+    }
+  }
+end
 EOF
