@@ -1,41 +1,24 @@
+[theme]
 theme = "gruvbox-dark"
+[icons]
 icons = "awesome"
 
-# [[block]]
-# block = "music"
-# player = "spotify"
-# buttons = ["prev","play", "next"]
-# on_collapsed_click = "spotify"
-
-# [[block]]
-# block = "disk_space"
-# path = "/"
-# alias = "/"
-# info_type = "available"
-# unit = "GB"
-# interval = 20
-# warning = 20.0
-# alert = 10.0
-
 [[block]]
-block = "focused_window"
-max_width=50
-show_marks="visible"
+block = "github"
+interval = 1800 # check every half hour (in seconds)
 
 [[block]]
 block="pacman"
 interval = 600
-format = "{pacman} updates available"
-format_singular = "{pacman} update available"
-format_up_to_date = "up-to-date"
+format = " $pacman + $aur = $both updates available "
+format_singular = " $both update available "
+format_up_to_date = " $icon up-to-date "
 critical_updates_regex = "(linux|linux-lts|linux-zen)"
-on_click = "fakeroot pacman -Qu -dbpath /tmp/checkup-db-hasan/ | wofi --show dmenu"
+aur_command = "yay -Qua"
 
 [[block]]
 block = "memory"
-display_type = "memory"
-format_mem = "{mem_used_percents}"
-clickable = true
+format = " $icon $mem_total_used_percents "
 
 [[block]]
 block = "cpu"
@@ -49,26 +32,16 @@ block="backlight"
 device="intel_backlight"
 step_width = 15 #set in .config/i3/config
 
-
-# [[block]]
-# block = "xrandr"
-# icons = true
-# resolution = true
-# interval = 2
-
 [[block]]
 block = "battery"
 device="BAT1"
 driver = "upower"
 interval=10
-format = "{percentage} {time}"
-
-# [[block]]
-# block = "networkmanager"
-# ap_format =  "{ssid}"
+full_threshold = 99
+format = " $icon $percentage "
 
 [[block]]
 block = "time"
 interval = 60
-format = "%a %d/%m %R"
+# format = " %a %d/%m %R "
 
