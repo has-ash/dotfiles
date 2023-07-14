@@ -1,3 +1,7 @@
+-- disable netrw for nvim-tree
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 -- Install packer
 local install_path = vim.fn.stdpath 'data' .. '/site/pack/packer/start/packer.nvim'
 
@@ -11,6 +15,9 @@ vim.cmd [[
     autocmd BufWritePost init.lua PackerCompile
   augroup end
 ]]
+
+-- neotree remove deprecated commands from v1.x
+vim.cmd([[ let g:neo_tree_remove_legacy_commands = 1 ]])
 
 local use = require('packer').use
 require('packer').startup(function()
@@ -42,6 +49,21 @@ require('packer').startup(function()
   use 'hrsh7th/cmp-nvim-lsp'
   use 'saadparwaiz1/cmp_luasnip'
   use 'L3MON4D3/LuaSnip' -- Snippets plugin
+
+  -- Get ORGanized
+  use {'nvim-orgmode/orgmode', config = function()
+    require('orgmode').setup{}
+  end
+  }
+
+  -- file explorer
+  use {
+    'nvim-tree/nvim-tree.lua',
+    requires = {
+      'nvim-tree/nvim-web-devicons', -- optional, requires terminal emulator to be configured properly
+    }
+  }
+
 end)
 
 -- indentation
@@ -56,7 +78,7 @@ vim.o.termguicolors = true
 vim.g.onedark_terminal_italics = 2
 vim.g.gruvbox_italic = 1
 vim.o.background = 'dark'
-vim.cmd [[colorscheme gruvbox]]
+vim.cmd [[colorscheme onedark]]
 
 -- use fd for ESC
 vim.api.nvim_set_keymap('i', 'fd', '<esc>', { noremap = true })
@@ -144,8 +166,12 @@ require('telescope').setup {
         ['<C-d>'] = false,
       },
     },
+    path_display = {
+      "smart"
+    },
   },
 }
+
 --Add leader shortcuts
 vim.api.nvim_set_keymap('n', '<leader><space>', [[<cmd>lua require('telescope.builtin').buffers()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>sf', [[<cmd>lua require('telescope.builtin').find_files({previewer = false})<CR>]], { noremap = true, silent = true })
@@ -157,11 +183,17 @@ vim.api.nvim_set_keymap('n', '<leader>sp', [[<cmd>lua require('telescope.builtin
 vim.api.nvim_set_keymap('n', '<leader>so', [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>?', [[<cmd>lua require('telescope.builtin').oldfiles()<CR>]], { noremap = true, silent = true })
 
+-- orgmode
+require('orgmode').setup_ts_grammar()
+
 -- Treesitter configuration
 -- Parsers must be installed manually via :TSInstall
 require('nvim-treesitter.configs').setup {
   highlight = {
     enable = true, -- false will disable the whole extension
+    -- added the following for orgmode spellcheck, some LaTeX highlighting
+    -- and code block highlights that do not have ts grammar
+    additional_vim_regex_highlighting = {'org'}
   },
   incremental_selection = {
     enable = true,
@@ -210,6 +242,13 @@ require('nvim-treesitter.configs').setup {
   },
 }
 
+-- org mode locations
+require('orgmode').setup({
+  org_agenda_files = {'~/Documents/org/*'},
+  org_default_notes_file = '~/Documents/org/notes.org',
+  org_indent_mode = 'noindent',
+})
+
 -- LSP settings
 local lspconfig = require 'lspconfig'
 local on_attach = function(_, bufnr)
@@ -235,6 +274,13 @@ local on_attach = function(_, bufnr)
   vim.cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
 end
 
+require('cmp').setup({
+  sources = {
+    { name = 'orgmode' },
+    { name = 'nvim_lsp_signature_help' },
+  }
+})
+
 -- nvim-cmp supports additional completion capabilities
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
@@ -254,8 +300,8 @@ local runtime_path = vim.split(package.path, ';')
 table.insert(runtime_path, 'lua/?.lua')
 table.insert(runtime_path, 'lua/?/init.lua')
 
-lspconfig.sumneko_lua.setup {
-  cmd = { '/usr/bin/lua-language-server' },
+lspconfig.lua_ls.setup {
+  cmd = { '/home/h.ashraf/from-source/lua-language-server/bin/lua-language-server' },
   on_attach = on_attach,
   capabilities = capabilities,
   settings = {
@@ -273,6 +319,7 @@ lspconfig.sumneko_lua.setup {
       workspace = {
         -- Make the server aware of Neovim runtime files
         library = vim.api.nvim_get_runtime_file('', true),
+        checkThirdParty = false,
       },
       -- Do not send telemetry data containing a randomized but unique identifier
       telemetry = {
@@ -329,7 +376,38 @@ cmp.setup {
   },
 }
 
+-- nvim-tree setup
+require("nvim-tree").setup({
+  view = {
+    width = 50,
+  },
+  renderer = {
+    group_empty = true,
+  },
+  filters = {
+    dotfiles = true,
+  },
+  update_focused_file =  {
+    enable = true,
+  },
+})
 
--- auto-format on save for c++ files
-vim.cmd [[autocmd BufWritePre *.cpp lua vim.lsp.buf.formatting_sync()]]
-vim.cmd [[autocmd BufWritePre *.h lua vim.lsp.buf.formatting_sync()]]
+-- auto-format on save
+vim.cmd [[autocmd BufWritePre *.cpp lua vim.lsp.buf.format({ async = false })]]
+vim.cmd [[autocmd BufWritePre *.h lua vim.lsp.buf.format({ async = false })]]
+
+-- gutentags ignore gitignored files (by relying on the fact that rg --files ignore these too)
+vim.g.gutentags_ctags_exclude = {
+  'docker/.local-build-cache/*'
+}
+
+-- autoread buffers on change
+-- see: https://stackoverflow.com/questions/62100785/auto-reload-file-and-in-neovim-and-auto-reload-nerbtree
+vim.o.autoread = true -- from the docs, this should already do what we want, but experimentally speaking, we do need the next few lines
+vim.api.nvim_create_autocmd({
+  "BufEnter", "CursorHold", "CursorHoldI", "FocusGained"}, {
+    command = "if mode() != 'c' | checktime | endif",
+    pattern = { "*" },
+  }
+)
+
