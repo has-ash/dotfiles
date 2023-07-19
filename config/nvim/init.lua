@@ -418,5 +418,5 @@ vim.api.nvim_create_autocmd({
 )
 
 --  define mapping for ClangdHeaderSwitchSourceHeader
-vim.api.nvim_set_keymap('n', '<F10>', ':ClangdHeaderSwitchSourceHeader<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<F10>', ':ClangdSwitchSourceHeader<CR>', { noremap = true })
 
