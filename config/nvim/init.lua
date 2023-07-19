@@ -170,6 +170,12 @@ require('telescope').setup {
       "smart"
     },
   },
+  pickers = {
+    buffers = {
+      ignore_current_buffer = true,
+      sort_mru = true
+    },
+  },
 }
 
 --Add leader shortcuts
