@@ -8,7 +8,7 @@ function create-worktree -a remote_branch
   echo "remote: $remote_branch \nlocal: $local_branch"
 
   # check if local branch already exists
-  if git show-ref --verify --quiet refs/head/$branch_name
+  if git show-ref --verify --quiet refs/heads/$branch_name
     echo "Local branch already exists."]
   else
     git checkout -b $branch_name $remote_branch
