@@ -90,6 +90,9 @@ vim.api.nvim_set_keymap('n', '<leader>bn', ':bn<CR>', { noremap = true })
 -- if hlsearch, use fd to turn off highlight
 vim.api.nvim_set_keymap('n', 'fd', ':nohls<CR>', { noremap = true, silent = true })
 
+-- paste last yanked text
+vim.keymap.set({ 'n', 'v', 'x' }, ',p', '"0p',  { noremap = true, silent = true })
+
 --Set highlight on search
 vim.o.hlsearch = false
 
@@ -120,7 +123,7 @@ vim.o.completeopt = 'menuone,noselect'
 vim.g.lightline = {
   colorscheme = 'onedark',
   active = { left = { { 'mode', 'paste' }, { 'gitbranch', 'readonly', 'filename', 'modified' } } },
-  component_function = { gitbranch = 'fugitive#head' },
+  component_function = { gitbranch = 'FugitiveHead' },
 }
 
 --Remap space as leader key
@@ -184,10 +187,12 @@ vim.api.nvim_set_keymap('n', '<leader>sf', [[<cmd>lua require('telescope.builtin
 vim.api.nvim_set_keymap('n', '<leader>sb', [[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>sh', [[<cmd>lua require('telescope.builtin').help_tags()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>st', [[<cmd>lua require('telescope.builtin').tags()<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>sw', [[<cmd>lua require('telescope.builtin').grep_string()<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>sg', [[<cmd>lua require('telescope.builtin').live_grep()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>sd', [[<cmd>lua require('telescope.builtin').grep_string()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>sp', [[<cmd>lua require('telescope.builtin').live_grep()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>so', [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>?', [[<cmd>lua require('telescope.builtin').oldfiles()<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>gr', [[<cmd>lua require('telescope.builtin').lsp_references()<CR>]], { noremap = true, silent = true })
 
 -- orgmode
 require('orgmode').setup_ts_grammar()
@@ -206,7 +211,7 @@ require('nvim-treesitter.configs').setup {
     keymaps = {
       init_selection = 'gnn',
       node_incremental = 'grn',
-      scope_incremental = 'grc',
+      scope_incrememtal = 'grc',
       node_decremental = 'grm',
     },
   },
@@ -420,3 +425,5 @@ vim.api.nvim_create_autocmd({
 --  define mapping for ClangdHeaderSwitchSourceHeader
 vim.api.nvim_set_keymap('n', '<F10>', ':ClangdSwitchSourceHeader<CR>', { noremap = true })
 
+-- set lsp logs off (if there are issues, use "debug")
+vim.lsp.set_log_level("off")
